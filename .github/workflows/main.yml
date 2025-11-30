@@ -1,4 +1,4 @@
-ame: Flutter Integration Tests 
+name: Flutter Integration Tests 
  
 on: 
   push: 
