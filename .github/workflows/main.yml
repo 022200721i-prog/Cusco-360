@@ -1,4 +1,4 @@
-name: Flutter Integration Tests (Rápido)
+name: Flutter Integration Tests
 
 on:
   push:
@@ -22,23 +22,20 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      # 4️⃣ Ejecutar emulador Android ligero
+      # 4️⃣ Iniciar emulador Android ligero
       - name: Run Android Emulator
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
-          api-level: 29
-          target: google_apis
-          arch: x86           # más rápido en CI
-          profile: pixel_4
+          api-level: 29                  # más rápido que 30 en CI
+          target: google_apis             # imagen compatible y ligera
+          arch: x86                       # funciona sin KVM en GitHub Actions
+          profile: pixel_2
           force-avd-creation: true
           disable-animations: true
-          wait-for-boot: true
+          emulator-boot-timeout: 600     # esperar hasta 10 minutos
           emulator-options: -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect
+          script: flutter test integration_test/festivities_test.dart -d emulator-5554
 
-      # 5️⃣ Verificar que ADB detecta el emulador
+      # 5️⃣ Verificar dispositivos conectados (opcional, para debug)
       - name: List connected devices
         run: adb devices
-
-      # 6️⃣ Ejecutar tests de integración en el emulador
-      - name: Run integration tests
-        run: flutter test integration_test/festivities_test.dart -d emulator-5554
