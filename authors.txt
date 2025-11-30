@@ -1,0 +1,2 @@
+rewrite-author Kimberly.* Kiara Mozo <0222200721i@uandina.edu.pe>
+rewrite-author kimberly.* Kiara Mozo <0222200721i@uandina.edu.pe>
