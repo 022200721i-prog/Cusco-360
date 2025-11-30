@@ -1,4 +1,4 @@
-name: Flutter Integration Tests
+name: Flutter Integration Tests (Rápido)
 
 on:
   push:
@@ -10,23 +10,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Clonar repositorio
       - uses: actions/checkout@v4
 
+      # 2️⃣ Instalar Flutter
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.38.3"
 
+      # 3️⃣ Instalar dependencias
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Run integration tests
+      # 4️⃣ Ejecutar emulador Android ligero
+      - name: Run Android Emulator
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
-          api-level: 29               # API más estable y rápido
-          target: google_apis         # Imagen liviana y compatible
-          arch: x86                   # Más rápido (sin x86_64)
-          profile: pixel_4            # Emulador moderno
-          force-avd-creation: true   # Reutiliza AVD para evitar fallos
+          api-level: 29
+          target: google_apis
+          arch: x86           # más rápido en CI
+          profile: pixel_4
+          force-avd-creation: true
           disable-animations: true
+          wait-for-boot: true
           emulator-options: -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect
-          script: flutter test integration_test/festivities_test.dart
+
+      # 5️⃣ Verificar que ADB detecta el emulador
+      - name: List connected devices
+        run: adb devices
+
+      # 6️⃣ Ejecutar tests de integración en el emulador
+      - name: Run integration tests
+        run: flutter test integration_test/festivities_test.dart -d emulator-5554
