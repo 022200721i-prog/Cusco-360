@@ -10,35 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Clonar el repositorio
       - uses: actions/checkout@v4
 
-      # 2️⃣ Configurar Java (necesario para Android)
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3️⃣ Instalar Flutter
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.0"  # ✅ Versión válida (usa la última estable)
+          flutter-version: "3.27.1"
           channel: 'stable'
 
-      # 4️⃣ Instalar dependencias del proyecto
+      # Deshabilitar analytics para CI
+      - name: Disable Flutter analytics
+        run: flutter config --no-analytics
+
       - name: Install dependencies
         run: flutter pub get
 
-      # 5️⃣ Aceptar licencias de Android
       - name: Accept Android licenses
         run: yes | flutter doctor --android-licenses || true
 
-      # 6️⃣ Mostrar Flutter doctor (diagnóstico)
       - name: Flutter doctor
         run: flutter doctor -v
 
-      # 7️⃣ Ejecutar el emulador Android y las pruebas
       - name: Run integration tests
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
@@ -46,11 +43,12 @@ jobs:
           target: google_apis
           arch: x86_64
           profile: pixel_3a
-          force-avd-creation: false  # Reutiliza AVD si existe (más rápido)
+          force-avd-creation: false
           disable-animations: true
           emulator-boot-timeout: 600
           emulator-options: -no-window -no-audio -no-snapshot-save -no-boot-anim -gpu swiftshader_indirect
           script: |
+            flutter config --no-analytics
             adb wait-for-device
             adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
             flutter devices -v
