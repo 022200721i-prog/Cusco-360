@@ -4,64 +4,29 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+
 
 jobs:
-  android-integration-test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
+  integration-test:
+    runs-on: macos-latest  # IMPORTANTE: ubuntu NO soporta emulador
 
     steps:
-      # 1. Checkout del repo
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # 2. Java para Gradle
-      - uses: actions/setup-java@v3
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          flutter-version: "3.24.0"
 
-      # 3. Flutter
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.x'
-          channel: 'stable'
-
-      # 4. Dependencias
-      - name: Flutter pub get
+      - name: Install dependencies
         run: flutter pub get
 
-      # 5. Instalar SDK + imagen ARM
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-
-      # 6. Crear e iniciar emulador ARM64 (FUNCIONA EN UBUNTU)
-      - name: Crear e iniciar emulador ARM64
-        run: |
-          echo "Instalando imagen ARM64..."
-          echo "y" | sdkmanager --install "system-images;android-30;google_apis;arm64-v8a"
-
-          echo "Creando AVD..."
-          echo "no" | avdmanager create avd -n Test -k "system-images;android-30;google_apis;arm64-v8a" -d pixel_4
-
-          echo "Iniciando emulador..."
-          nohup emulator -avd Test -no-window -no-audio -no-boot-anim &
-
-          echo "Esperando boot..."
-          adb wait-for-device
-          
-          # Esperar a boot
-          for i in {1..40}; do
-            BOOT=$(adb shell getprop sys.boot_completed | tr -d '\r')
-            [ "$BOOT" = "1" ] && break
-            sleep 5
-          done
-
-      # 7. Ejecutar test
-      - name: Ejecutar test de integración
-        run: flutter test integration_test/festivities_test.dart
-
-      # 8. Apagar emulador
-      - name: Apagar emulador
-        if: always()
-        run: adb emu kill
+      - name: Start Android emulator
+        uses: ReactiveCircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          arch: arm64-v8a
+          target: google_apis
+          profile: Pixel_6
+          script: flutter test integration_test/festivities_test.dart
