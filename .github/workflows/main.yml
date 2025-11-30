@@ -23,7 +23,6 @@ jobs:
           flutter-version: "3.27.1"
           channel: 'stable'
 
-      # Deshabilitar analytics para CI
       - name: Disable Flutter analytics
         run: flutter config --no-analytics
 
@@ -48,7 +47,6 @@ jobs:
           emulator-boot-timeout: 600
           emulator-options: -no-window -no-audio -no-snapshot-save -no-boot-anim -gpu swiftshader_indirect
           script: |
-            flutter config --no-analytics
             adb wait-for-device
             adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
             flutter devices -v
