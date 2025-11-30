@@ -30,9 +30,11 @@ jobs:
       - name: Ejecutar Test en Emulador
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 31
-          target: google_apis
-          arch: arm64-v8a
-          profile: Nexus 6
+          api-level: 30
+          target: default
+          arch: x86_64
+          profile: Pixel_4
           disable-animations: true
+          emulator-options: -no-audio -no-window -gpu swiftshader_indirect
+          boot-timeout: 600
           script: flutter test integration_test/festivities_test.dart
