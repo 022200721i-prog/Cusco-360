@@ -2,20 +2,20 @@ name: Flutter CI - Integration Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   android-integration-test:
     runs-on: macos-latest
-    timeout-minutes: 35
+    timeout-minutes: 25
 
     steps:
-      # 1. Descargar repositorio
+      # 1. Checkout del repo
       - uses: actions/checkout@v4
 
-      # 2. Instalar Java (Requerido por Gradle/Android)
+      # 2. Java para Gradle/Android
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
@@ -27,59 +27,16 @@ jobs:
           flutter-version: '3.x'
           channel: 'stable'
 
-      # 4. Dependencias Flutter
-      - name: Instalar dependencias Flutter
+      # 4. Flutter pub get
+      - name: Instalar dependencias
         run: flutter pub get
 
-      # 5. Instalar Android SDK
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-
-      # 6. Crear e iniciar emulador x86_64 (FUNCIONA EN GITHUB)
-      - name: Crear e iniciar emulador Android (x86_64)
-        run: |
-          echo "📦 Instalando system image..."
-          echo "y" | sdkmanager --install "system-images;android-30;google_apis;x86_64"
-
-          echo "🛠 Creando AVD..."
-          echo "no" | avdmanager create avd -n TestDevice -k "system-images;android-30;google_apis;x86_64" -d pixel_4
-
-          echo "🚀 Iniciando emulador..."
-          nohup emulator -avd TestDevice -no-window -gpu swiftshader_indirect -no-audio -no-boot-anim &
-
-          echo "⌛ Esperando que ADB detecte el dispositivo..."
-          adb wait-for-device
-
-      # 7. Esperar boot completo
-      - name: Esperar a que Android termine de bootear
-        run: |
-          echo "⌛ Esperando boot del emulador..."
-          for i in {1..60}; do
-            BOOT=$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')
-            if [ "$BOOT" = "1" ]; then
-              echo "🎉 Android está listo"
-              break
-            fi
-            echo "⏳ Intento $i/60"
-            sleep 5
-          done
-
-          echo "🔧 Desactivando animaciones..."
-          adb shell settings put global window_animation_scale 0
-          adb shell settings put global transition_animation_scale 0
-          adb shell settings put global animator_duration_scale 0
-
-      # 8. Verificar dispositivos conectados (Debug)
-      - name: Verificar emulador y dispositivos
-        run: |
-          flutter devices
-          adb devices
-
-      # 9. Ejecutar pruebas de integración
-      - name: Ejecutar test de integración
-        run: flutter test integration_test/app_test.dart
-
-      # 10. Apagar emulador siempre
-      - name: Apagar emulador
-        if: always()
-        run: adb emu kill
+      # 5. Arrancar emulador + correr tests
+      - name: Ejecutar Test en Emulador
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_4
+          script: flutter test integration_test/festivities_test.dart
