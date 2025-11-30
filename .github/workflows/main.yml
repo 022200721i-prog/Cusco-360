@@ -1,53 +1,32 @@
-name: Flutter Integration Tests
-
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-
-jobs:
-  integration-test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.27.1"
-          channel: 'stable'
-
-      - name: Disable Flutter analytics
-        run: flutter config --no-analytics
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Accept Android licenses
-        run: yes | flutter doctor --android-licenses || true
-
-      - name: Flutter doctor
-        run: flutter doctor -v
-
-      - name: Run integration tests
-        uses: ReactiveCircus/android-emulator-runner@v2
-        with:
-          api-level: 31
-          target: google_apis
-          arch: x86_64
-          profile: pixel_3a
-          force-avd-creation: false
-          disable-animations: true
-          emulator-boot-timeout: 600
-          emulator-options: -no-window -no-audio -no-snapshot-save -no-boot-anim -gpu swiftshader_indirect
-          script: |
-            adb wait-for-device
-            adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
-            flutter devices -v
-            flutter test integration_test/festivities_test.dart
+ame: Flutter Integration Tests 
+ 
+on: 
+  push: 
+    branches: [ main ] 
+  pull_request: 
+ 
+jobs: 
+  integration-test: 
+    runs-on: ubuntu-latest 
+ 
+    steps: 
+      - uses: actions/checkout@v4 
+ 
+      - uses: subosito/flutter-action@v2 
+        with: 
+          flutter-version: "3.38.3" 
+ 
+      - name: Install dependencies 
+        run: flutter pub get 
+ 
+      - name: Run integration tests 
+        uses: ReactiveCircus/android-emulator-runner@v2 
+        with: 
+          api-level: 30 
+          target: default 
+          arch: x86_64 
+          profile: pixel_2 
+          force-avd-creation: true 
+          disable-animations: true 
+ 
+          script: flutter test integration_test/festivities_test.dart 
