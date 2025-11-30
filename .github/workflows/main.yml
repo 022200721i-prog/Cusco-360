@@ -10,32 +10,48 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Clonar repositorio
+      # 1️⃣ Clonar el repositorio
       - uses: actions/checkout@v4
 
-      # 2️⃣ Instalar Flutter
+      # 2️⃣ Configurar Java (necesario para Android)
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3️⃣ Instalar Flutter
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.38.3"
+          flutter-version: "3.24.0"  # ✅ Versión válida (usa la última estable)
+          channel: 'stable'
 
-      # 3️⃣ Instalar dependencias
+      # 4️⃣ Instalar dependencias del proyecto
       - name: Install dependencies
         run: flutter pub get
 
-      # 4️⃣ Iniciar emulador Android ligero
-      - name: Run Android Emulator
+      # 5️⃣ Aceptar licencias de Android
+      - name: Accept Android licenses
+        run: yes | flutter doctor --android-licenses || true
+
+      # 6️⃣ Mostrar Flutter doctor (diagnóstico)
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      # 7️⃣ Ejecutar el emulador Android y las pruebas
+      - name: Run integration tests
         uses: ReactiveCircus/android-emulator-runner@v2
         with:
-          api-level: 29                  # más rápido que 30 en CI
-          target: google_apis             # imagen compatible y ligera
-          arch: x86                       # funciona sin KVM en GitHub Actions
-          profile: pixel_2
-          force-avd-creation: true
+          api-level: 31
+          target: google_apis
+          arch: x86_64
+          profile: pixel_3a
+          force-avd-creation: false  # Reutiliza AVD si existe (más rápido)
           disable-animations: true
-          emulator-boot-timeout: 600     # esperar hasta 10 minutos
-          emulator-options: -no-window -no-audio -no-snapshot -no-boot-anim -gpu swiftshader_indirect
-          script: flutter test integration_test/festivities_test.dart -d emulator-5554
-
-      # 5️⃣ Verificar dispositivos conectados (opcional, para debug)
-      - name: List connected devices
-        run: adb devices
+          emulator-boot-timeout: 600
+          emulator-options: -no-window -no-audio -no-snapshot-save -no-boot-anim -gpu swiftshader_indirect
+          script: |
+            adb wait-for-device
+            adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done'
+            flutter devices -v
+            flutter test integration_test/festivities_test.dart
