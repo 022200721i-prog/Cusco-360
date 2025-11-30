@@ -11,4 +11,16 @@ class FestivityViewModel {
   Future<Festivity?> getFestivityById(String id) {
     return _service.getFestivityById(id);
   }
+
+  Future<List<Festivity>> getFestivitiesByMonth(String month) {
+    return _service.fetchFestivitiesByMonth(month);
+  }
+
+  Future<List<Festivity>> getFeaturedFestivities() {
+    return _service.fetchFeaturedFestivities();
+  }
+
+  Future<List<Festivity>> searchFestivities(String query) {
+    return _service.searchFestivities(query);
+  }
 }
